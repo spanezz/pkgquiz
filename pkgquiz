@@ -4,11 +4,13 @@ import apt
 import random
 
 class Quiz:
-    def __init__(self):
+    def __init__(self, only_installed=False):
         cache = apt.Cache()
 
         self.descs = {}
         for pkg in cache:
+            if only_installed and not pkg.is_installed:
+                continue
             ver = pkg.candidate
             if ver is None: continue
             tags = ver.record.get("Tag", None)
@@ -58,21 +60,31 @@ class Quiz:
 
             return True
 
-print("Collecting package information...")
-quiz = Quiz()
-while True:
-    cont = quiz.run_once()
-    if not cont: break
+def parseCmdlineArgs():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--installed', action='store_true',
+                        help="Only quiz installed packages")
+    args = parser.parse_args()
+    return args
 
-print()
-if quiz.count_incorrect == 0:
-    if quiz.count_correct == 0:
-        pass
+if __name__ == '__main__':
+    args=parseCmdlineArgs()
+    print("Collecting package information...")
+    quiz = Quiz(args.installed)
+    while True:
+        cont = quiz.run_once()
+        if not cont: break
+
+    print()
+    if quiz.count_incorrect == 0:
+        if quiz.count_correct == 0:
+            pass
+        else:
+            print("You got all {} of them right! *hug*".format(quiz.count_correct))
     else:
-        print("You got all {} of them right! *hug*".format(quiz.count_correct))
-else:
-    if quiz.count_correct == 0:
-        print("You got none of the {} of them right *hug*".format(quiz.count_incorrect))
-    else:
-        print("You got {}/{} of them right".format(quiz.count_correct, quiz.count_correct + quiz.count_incorrect))
+        if quiz.count_correct == 0:
+            print("You got none of the {} of them right *hug*".format(quiz.count_incorrect))
+        else:
+            print("You got {}/{} of them right".format(quiz.count_correct, quiz.count_correct + quiz.count_incorrect))
 
