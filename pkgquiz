@@ -60,9 +60,18 @@ class Quiz:
 
             return True
 
+def parseCmdlineArgs():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--installed', action='store_true',
+                        help="Only quiz installed packages")
+    args = parser.parse_args()
+    return args
+
 if __name__ == '__main__':
+    args=parseCmdlineArgs()
     print("Collecting package information...")
-    quiz = Quiz()
+    quiz = Quiz(args.installed)
     while True:
         cont = quiz.run_once()
         if not cont: break
