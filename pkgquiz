@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import apt
+import random
+
+cache = apt.Cache()
+
+descs = {}
+for pkg in cache:
+    ver = pkg.candidate
+    if ver is None: continue
+    tags = ver.record.get("Tag", None)
+    if tags is None or "role::program" not in tags: continue
+    descs[pkg.shortname] = ver.summary
+
+names = list(descs.keys())
+cand_idx = random.randint(0, len(names))
+name = names.pop(cand_idx)
+other_names = random.sample(names, 2)
+cand_descs = [descs[name]] + [descs[x] for x in other_names]
+print(name)
+for d in cand_descs:
+    print("   ", d)
