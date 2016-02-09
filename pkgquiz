@@ -67,9 +67,9 @@ def parseCmdlineArgs():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--installed', action='store_true',
-                        help="Only quiz installed packages")
+                        help="only quiz installed packages")
     parser.add_argument('-a', '--answers', action='store_true',
-                        help="Show the correct answers in case you missed it")
+                        help="show the correct answers in case you missed it")
     args = parser.parse_args()
     return args
 
