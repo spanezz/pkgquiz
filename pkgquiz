@@ -5,6 +5,7 @@ import random
 
 class Quiz:
     def __init__(self, only_installed=False):
+        print("Collecting package information...")
         cache = apt.Cache()
 
         self.descs = {}
@@ -69,7 +70,6 @@ def parseCmdlineArgs():
 
 if __name__ == '__main__':
     args=parseCmdlineArgs()
-    print("Collecting package information...")
     quiz = Quiz(args.installed)
     while True:
         cont = quiz.run_once()
