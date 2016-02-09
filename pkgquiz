@@ -2,36 +2,66 @@
 
 import apt
 import random
+import re
 
 class Quiz:
-    def __init__(self, only_installed=False, show_answers=False):
+    def __init__(self, only_installed=False, show_answers=False, hard=False):
         print("Collecting package information...")
         cache = apt.Cache()
+        re_apt_tags = re.compile(r",\s+")
 
         self.descs = {}
+        self.tags = {}
         for pkg in cache:
             if only_installed and not pkg.is_installed: continue
             ver = pkg.candidate
             if ver is None: continue
-            tags = ver.record.get("Tag", None)
-            if tags is None or "role::program" not in tags: continue
+            tags = set(re_apt_tags.split(ver.record.get("Tag", "")))
+            if "role::program" not in tags: continue
             self.descs[pkg.shortname] = ver.summary
+            self.tags[pkg.shortname] = tags
 
         self.names = list(self.descs.keys())
 
         self.count_correct = 0
         self.count_incorrect = 0
         self.show_answers = show_answers
+        self.hard = hard
 
     def pick_name(self):
         cand_idx = random.randint(0, len(self.names))
         return self.names.pop(cand_idx)
 
     def pick_descs(self, name, count=3):
-        other_names = random.sample(self.names, count - 1)
+        if len(self.names) < count: return None
+
+        if self.hard:
+            other_names = self.sample_hard(name, count - 1)
+        else:
+            other_names = random.sample(self.names, count - 1)
         cand_descs = [self.descs[name]] + [self.descs[x] for x in other_names]
         random.shuffle(cand_descs)
         return cand_descs
+
+    def sample_hard(self, name, count):
+        """
+        Sample package names, preferring those that have tags similar to those
+        of `name`
+        """
+        # Score all choices by how many tags are in common
+        scored_names = []
+        selected_tags = self.tags[name]
+        for cand in self.names:
+            score = len(selected_tags.intersection(self.tags[cand]))
+            scored_names.append((score, cand))
+        scored_names.sort(key=lambda x:-x[0])
+
+        # Choose
+        poolsize = min(len(self.names), 10)
+        seen = set()
+        while len(seen) < count:
+            seen.add(round(random.triangular(0, poolsize, 0)))
+        return [scored_names[x][1] for x in seen]
 
     def run_once(self):
         name = self.pick_name()
@@ -70,12 +100,14 @@ def parseCmdlineArgs():
                         help="only quiz installed packages")
     parser.add_argument('-a', '--answers', action='store_true',
                         help="show the correct answers in case you missed it")
+    parser.add_argument('--hard', action='store_true',
+                        help="choose other descriptions from similar packages")
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args=parseCmdlineArgs()
-    quiz = Quiz(only_installed=args.installed, show_answers=args.answers)
+    quiz = Quiz(only_installed=args.installed, show_answers=args.answers, hard=args.hard)
     while True:
         cont = quiz.run_once()
         if not cont: break
