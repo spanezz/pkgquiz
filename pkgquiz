@@ -9,8 +9,7 @@ class Quiz:
 
         self.descs = {}
         for pkg in cache:
-            if only_installed and not pkg.is_installed:
-                continue
+            if only_installed and not pkg.is_installed: continue
             ver = pkg.candidate
             if ver is None: continue
             tags = ver.record.get("Tag", None)
