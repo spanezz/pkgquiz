@@ -4,11 +4,13 @@ import apt
 import random
 
 class Quiz:
-    def __init__(self):
+    def __init__(self, only_installed=False):
         cache = apt.Cache()
 
         self.descs = {}
         for pkg in cache:
+            if only_installed and not pkg.is_installed:
+                continue
             ver = pkg.candidate
             if ver is None: continue
             tags = ver.record.get("Tag", None)
