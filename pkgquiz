@@ -4,7 +4,7 @@ import apt
 import random
 
 class Quiz:
-    def __init__(self, only_installed=False):
+    def __init__(self, only_installed=False, show_answers=False):
         print("Collecting package information...")
         cache = apt.Cache()
 
@@ -21,6 +21,7 @@ class Quiz:
 
         self.count_correct = 0
         self.count_incorrect = 0
+        self.show_answers = show_answers
 
     def pick_name(self):
         cand_idx = random.randint(0, len(self.names))
@@ -56,6 +57,8 @@ class Quiz:
                 self.count_correct += 1
             else:
                 print("Incorrect!")
+                if self.show_answers:
+                    print("The correct answer was: {}".format(self.descs[name]))
                 self.count_incorrect += 1
 
             return True
@@ -65,12 +68,14 @@ def parseCmdlineArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--installed', action='store_true',
                         help="Only quiz installed packages")
+    parser.add_argument('-a', '--answers', action='store_true',
+                        help="Show the correct answers in case you missed it")
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args=parseCmdlineArgs()
-    quiz = Quiz(args.installed)
+    quiz = Quiz(only_installed=args.installed, show_answers=args.answers)
     while True:
         cont = quiz.run_once()
         if not cont: break
