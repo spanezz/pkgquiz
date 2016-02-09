@@ -58,21 +58,22 @@ class Quiz:
 
             return True
 
-print("Collecting package information...")
-quiz = Quiz()
-while True:
-    cont = quiz.run_once()
-    if not cont: break
+if __name__ == '__main__':
+    print("Collecting package information...")
+    quiz = Quiz()
+    while True:
+        cont = quiz.run_once()
+        if not cont: break
 
-print()
-if quiz.count_incorrect == 0:
-    if quiz.count_correct == 0:
-        pass
+    print()
+    if quiz.count_incorrect == 0:
+        if quiz.count_correct == 0:
+            pass
+        else:
+            print("You got all {} of them right! *hug*".format(quiz.count_correct))
     else:
-        print("You got all {} of them right! *hug*".format(quiz.count_correct))
-else:
-    if quiz.count_correct == 0:
-        print("You got none of the {} of them right *hug*".format(quiz.count_incorrect))
-    else:
-        print("You got {}/{} of them right".format(quiz.count_correct, quiz.count_correct + quiz.count_incorrect))
+        if quiz.count_correct == 0:
+            print("You got none of the {} of them right *hug*".format(quiz.count_incorrect))
+        else:
+            print("You got {}/{} of them right".format(quiz.count_correct, quiz.count_correct + quiz.count_incorrect))
 
