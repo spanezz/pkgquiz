@@ -3,33 +3,76 @@
 import apt
 import random
 
-cache = apt.Cache()
+class Quiz:
+    def __init__(self):
+        cache = apt.Cache()
 
-descs = {}
-for pkg in cache:
-    ver = pkg.candidate
-    if ver is None: continue
-    tags = ver.record.get("Tag", None)
-    if tags is None or "role::program" not in tags: continue
-    descs[pkg.shortname] = ver.summary
+        self.descs = {}
+        for pkg in cache:
+            ver = pkg.candidate
+            if ver is None: continue
+            tags = ver.record.get("Tag", None)
+            if tags is None or "role::program" not in tags: continue
+            self.descs[pkg.shortname] = ver.summary
 
-names = list(descs.keys())
-cand_idx = random.randint(0, len(names))
-name = names.pop(cand_idx)
-other_names = random.sample(names, 2)
-cand_descs = [descs[name]] + [descs[x] for x in other_names]
-random.shuffle(cand_descs)
-print(name)
-count = 0
-for d in cand_descs:
-    count = count + 1
-    print("   ",count, d)
-useranswer = 0
-while useranswer - 1 not in range(count):
-    text = input("Which description matches the package name?")
-    if text in [str(i) for i in range(1,count+1)]:
-        useranswer = int(text)
-if cand_descs[useranswer-1] == descs[name]:
-    print("Correct!")
+        self.names = list(self.descs.keys())
+
+        self.count_correct = 0
+        self.count_incorrect = 0
+
+    def pick_name(self):
+        cand_idx = random.randint(0, len(self.names))
+        return self.names.pop(cand_idx)
+
+    def pick_descs(self, name, count=3):
+        other_names = random.sample(self.names, count - 1)
+        cand_descs = [self.descs[name]] + [self.descs[x] for x in other_names]
+        random.shuffle(cand_descs)
+        return cand_descs
+
+    def run_once(self):
+        name = self.pick_name()
+        print()
+        print("What is the description for package {}?".format(name))
+
+        cand_descs = self.pick_descs(name)
+        for idx, d in enumerate(cand_descs, 1):
+            print("  {}) {}".format(idx, d))
+
+        while True:
+            text = input("Enter the number (q to quit): ")
+            if text.strip() == "q": return False
+
+            try:
+                useranswer = int(text)
+            except ValueError:
+                continue
+            if useranswer - 1 not in range(len(cand_descs)): continue
+
+            if cand_descs[useranswer - 1] == self.descs[name]:
+                print("Correct!")
+                self.count_correct += 1
+            else:
+                print("Incorrect!")
+                self.count_incorrect += 1
+
+            return True
+
+print("Collecting package information...")
+quiz = Quiz()
+while True:
+    cont = quiz.run_once()
+    if not cont: break
+
+print()
+if quiz.count_incorrect == 0:
+    if quiz.count_correct == 0:
+        pass
+    else:
+        print("You got all {} of them right! *hug*".format(quiz.count_correct))
 else:
-    print("Incorrect!")
+    if quiz.count_correct == 0:
+        print("You got none of the {} of them right *hug*".format(quiz.count_incorrect))
+    else:
+        print("You got {}/{} of them right".format(quiz.count_correct, quiz.count_correct + quiz.count_incorrect))
+
