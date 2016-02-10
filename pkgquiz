@@ -29,21 +29,33 @@ class Quiz:
         self.hard = hard
 
     def pick_name(self):
-        cand_idx = random.randint(0, len(self.names))
-        return self.names.pop(cand_idx)
+        return random.choice(self.names)
 
     def pick_descs(self, name, count=3):
         if len(self.names) < count: return None
 
-        if self.hard:
-            other_names = self.sample_hard(name, count - 1)
-        else:
-            other_names = random.sample(self.names, count - 1)
-        cand_descs = [self.descs[name]] + [self.descs[x] for x in other_names]
+        seen_names = set((name,))
+        seen_descs = set((self.descs[name],))
+        selected = [name]
+        while len(selected) < count:
+            if self.hard:
+                cand = self.select_hard(name)
+            else:
+                cand = self.select_random()
+            if cand in seen_names: continue
+            if self.descs[cand] in seen_descs: continue
+            seen_names.add(cand)
+            seen_descs.add(self.descs[cand])
+            selected.append(cand)
+
+        cand_descs = [self.descs[x] for x in selected]
         random.shuffle(cand_descs)
         return cand_descs
 
-    def sample_hard(self, name, count):
+    def select_random(self, name):
+        return random.choice(self.names)
+
+    def select_hard(self, name):
         """
         Sample package names, preferring those that have tags similar to those
         of `name`
@@ -58,10 +70,8 @@ class Quiz:
 
         # Choose
         poolsize = min(len(self.names), 10)
-        seen = set()
-        while len(seen) < count:
-            seen.add(round(random.triangular(0, poolsize, 0)))
-        return [scored_names[x][1] for x in seen]
+        idx = round(random.triangular(0, poolsize, 0))
+        return scored_names[idx][1]
 
     def run_once(self):
         name = self.pick_name()
