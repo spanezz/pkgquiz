@@ -41,7 +41,7 @@ class Quiz:
             if self.hard:
                 cand = self.select_hard(name)
             else:
-                cand = self.select_random()
+                cand = self.select_random(name)
             if cand in seen_names: continue
             if self.descs[cand] in seen_descs: continue
             seen_names.add(cand)
