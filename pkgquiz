@@ -22,6 +22,7 @@ class Quiz:
             self.tags[pkg.shortname] = tags
 
         self.names = list(self.descs.keys())
+        print("Guessing over {} packages".format(len(self.names)))
 
         self.count_correct = 0
         self.count_incorrect = 0
