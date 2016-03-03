@@ -6,12 +6,8 @@ import re
 import textwrap
 
 ## try wrapping all lines so they fit into the terminal
-import os
-try:
-    tty_rows, tty_columns = os.popen('stty size', 'r').read().split()
-    tty_columns=int(tty_columns)-2
-except ValueError:
-    tty_columns=70
+import shutils
+tty_columns=max(24, shutil.get_terminal_size().columns-2)
 def print_wrp(text, width=tty_columns):
     print(textwrap.fill(text, width=width))
 
