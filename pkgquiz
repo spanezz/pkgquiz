@@ -5,7 +5,12 @@ import random
 import re
 
 class Quiz:
-    def __init__(self, only_installed=False, show_answers=False, hard=False):
+    def __init__(self,
+                     only_installed=False,
+                     show_answers=False,
+                     hard=False,
+                     ask_pkgnames=False
+                     ):
         print("Collecting package information...")
         cache = apt.Cache()
         re_apt_tags = re.compile(r",\s+")
@@ -29,6 +34,8 @@ class Quiz:
         self.show_answers = show_answers
         self.hard = hard
 
+        self.ask_pkgnames = ask_pkgnames
+
     def pick_name(self):
         return random.choice(self.names)
 
@@ -49,7 +56,7 @@ class Quiz:
             seen_descs.add(self.descs[cand])
             selected.append(cand)
 
-        cand_descs = [self.descs[x] for x in selected]
+        cand_descs = [(x,self.descs[x]) for x in selected]
         random.shuffle(cand_descs)
         return cand_descs
 
@@ -76,12 +83,18 @@ class Quiz:
 
     def run_once(self):
         name = self.pick_name()
-        print()
-        print("What is the description for package {}?".format(name))
-
         cand_descs = self.pick_descs(name)
+
+        print()
+        if not self.ask_pkgnames:
+            print("What is the description for package {}?".format(name))
+            d_idx=1
+        else:
+            print(textwrap.fill(""""{}" is the description for which package?""".format(self.descs[name])))
+            d_idx=0
+
         for idx, d in enumerate(cand_descs, 1):
-            print("  {}) {}".format(idx, d))
+            print("  {}) {}".format(idx, d[d_idx]))
 
         while True:
             text = input("Enter the number (q to quit): ")
@@ -93,13 +106,13 @@ class Quiz:
                 continue
             if useranswer - 1 not in range(len(cand_descs)): continue
 
-            if cand_descs[useranswer - 1] == self.descs[name]:
+            if cand_descs[useranswer - 1][0] == name:
                 print("Correct!")
                 self.count_correct += 1
             else:
                 print("Incorrect!")
                 if self.show_answers:
-                    print("The correct answer was: {}".format(self.descs[name]))
+                    print("The correct answer was: {}".format(name if self.ask_pkgnames else self.descs[name]))
                 self.count_incorrect += 1
 
             return True
@@ -113,12 +126,14 @@ def parseCmdlineArgs():
                         help="show the correct answers in case you missed it")
     parser.add_argument('--hard', action='store_true',
                         help="choose other descriptions from similar packages")
+    parser.add_argument('-r', '--reverse', action='store_true',
+                        help="ask the package name for a given description (even harder)")
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args=parseCmdlineArgs()
-    quiz = Quiz(only_installed=args.installed, show_answers=args.answers, hard=args.hard)
+    quiz = Quiz(only_installed=args.installed, show_answers=args.answers, hard=args.hard, ask_pkgnames=args.reverse)
     while True:
         cont = quiz.run_once()
         if not cont: break
