@@ -6,7 +6,7 @@ import re
 import textwrap
 
 ## try wrapping all lines so they fit into the terminal
-import shutils
+import shutil
 tty_columns=max(24, shutil.get_terminal_size().columns-2)
 def print_wrp(text, width=tty_columns):
     print(textwrap.fill(text, width=width))
